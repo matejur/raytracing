@@ -1,11 +1,9 @@
 const std = @import("std");
 const print = std.debug.print;
 
-const Color = @import("Color.zig").Color;
-
-const geometry = @import("geometry.zig");
-const Vec3 = geometry.Vec3;
-const Pos3 = geometry.Pos3;
+const Color = @import("math/Color.zig").Color;
+const Pos3 = @import("math/Pos3.zig");
+const Vec3 = @import("math/Vec3.zig");
 
 const Ray = @import("Ray.zig");
 
@@ -21,15 +19,15 @@ const camera_center = Pos3.zero();
 const viewport_u = Vec3.new(viewport_width, 0, 0);
 const viewport_v = Vec3.new(0, -viewport_height, 0);
 
-const pixel_delta_u = viewport_u.div(image_width);
-const pixel_delta_v = viewport_v.div(image_height);
+const pixel_delta_u = viewport_u.scale(1 / @as(f32, @floatFromInt(image_width)));
+const pixel_delta_v = viewport_v.scale(1 / @as(f32, @floatFromInt(image_height)));
 
 const viewport_upper_left = camera_center
-    .sub(Vec3.new(0, 0, focal_length))
-    .sub(viewport_u.div(2))
-    .sub(viewport_v.div(2));
+    .subVec(.{ .x = 0, .y = 0, .z = focal_length })
+    .subVec(viewport_u.scale(0.5))
+    .subVec(viewport_v.scale(0.5));
 const first_pixel_loc = viewport_upper_left
-    .add(pixel_delta_u.add(pixel_delta_v).scale(0.5));
+    .addVec(pixel_delta_u.add(pixel_delta_v).scale(0.5));
 
 pub fn main(init: std.process.Init) !void {
     const io = init.io;
@@ -47,8 +45,8 @@ pub fn main(init: std.process.Init) !void {
         print("\rScanlines remaining: {}", .{image_height - j});
         for (0..image_width) |i| {
             const pixel_center = first_pixel_loc
-                .add(pixel_delta_u.scale(@floatFromInt(i)))
-                .add(pixel_delta_v.scale(@floatFromInt(j)));
+                .addVec(pixel_delta_u.scale(@floatFromInt(i)))
+                .addVec(pixel_delta_v.scale(@floatFromInt(j)));
             const ray_dir = pixel_center.sub(camera_center);
             const ray = Ray.new(camera_center, ray_dir);
 
