@@ -26,3 +26,4 @@ const common = Common(Vec3);
 pub const new = common.new;
 pub const scale = common.scale;
 pub const add = common.add(Vec3, Vec3, Vec3);
+pub const neg = common.neg;

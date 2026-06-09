@@ -4,6 +4,9 @@ const Color = @import("math/Color.zig");
 const Pos3 = @import("math/Pos3.zig");
 const Vec3 = @import("math/Vec3.zig");
 
+const hittable = @import("objects/hittable.zig");
+const World = hittable.World;
+
 const Ray = @This();
 
 orig: Pos3,
@@ -17,11 +20,10 @@ pub fn at(self: Ray, t: f32) Pos3 {
     return self.orig.addVec(self.dir.scale(t));
 }
 
-pub fn color(self: Ray) Color {
-    const center = Pos3.new(0, 0, -1);
-    const did_hit = hit_sphere(center, 0.5, &self);
-    if (did_hit) |t| {
-        const N = self.at(t).sub(center).normalize();
+pub fn color(self: *const Ray, world: *World) Color {
+    const did_hit = world.hit(self, 0, 100);
+    if (did_hit) |hit_info| {
+        const N = hit_info.normal;
         return Color.new(N.x + 1, N.y + 1, N.z + 1).scale(0.5);
     }
 
@@ -32,15 +34,4 @@ pub fn color(self: Ray) Color {
         Color{ .r = 0.5, .g = 0.7, .b = 1.0 },
         a,
     );
-}
-
-fn hit_sphere(center: Pos3, radius: f32, ray: *const Ray) ?f32 {
-    const oc = center.sub(ray.orig);
-    const a = ray.dir.lengthSqr();
-    const b = -2.0 * ray.dir.dot(oc);
-    const c = oc.lengthSqr() - radius * radius;
-    const D = b * b - 4.0 * a * c;
-
-    if (D < 0) return null;
-    return (-b - @sqrt(D)) / (2 * a);
 }

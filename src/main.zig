@@ -7,6 +7,12 @@ const Vec3 = @import("math/Vec3.zig");
 
 const Ray = @import("Ray.zig");
 
+const hittable = @import("objects/hittable.zig");
+const World = hittable.World;
+const Hittable = hittable.Hittable;
+
+const Sphere = @import("objects/Sphere.zig");
+
 const aspect: f32 = 16.0 / 9.0;
 const image_width: i32 = 400;
 const image_height: i32 = @max(1, @floor(image_width / aspect));
@@ -41,6 +47,13 @@ pub fn main(init: std.process.Init) !void {
 
     _ = try writer.print("P6\n{} {}\n255\n", .{ image_width, image_height });
 
+    var world = World{
+        .objects = &[_]Hittable{
+            .{ .sphere = Sphere{ .center = Pos3.new(0, 0, -1), .radius = 0.5 } },
+            .{ .sphere = Sphere{ .center = Pos3.new(0, -100.5, -1), .radius = 100 } },
+        },
+    };
+
     for (0..image_height) |j| {
         print("\rScanlines remaining: {}", .{image_height - j});
         for (0..image_width) |i| {
@@ -50,7 +63,7 @@ pub fn main(init: std.process.Init) !void {
             const ray_dir = pixel_center.sub(camera_center);
             const ray = Ray.new(camera_center, ray_dir);
 
-            const color = ray.color();
+            const color = ray.color(&world);
 
             try color.write_color(writer);
         }

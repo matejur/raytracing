@@ -43,6 +43,14 @@ pub fn Common(comptime Type: type) type {
             return result;
         }
 
+        pub fn neg(self: Type) Type {
+            var result: Type = undefined;
+            inline for (@typeInfo(Type).@"struct".fields) |field| {
+                @field(result, field.name) = -@field(self, field.name);
+            }
+            return result;
+        }
+
         pub fn sub(Self: type, Other: type, Return: type) fn (Self, Other) Return {
             return struct {
                 pub fn sub(self: Self, other: Other) Return {
