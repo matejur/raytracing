@@ -1,3 +1,5 @@
+const rand = @import("../utility.zig");
+
 pub fn Common(comptime Type: type) type {
     return struct {
         pub fn new(e1: f32, e2: f32, e3: f32) Type {
@@ -94,6 +96,22 @@ pub fn Common(comptime Type: type) type {
             var result: Type = undefined;
             inline for (@typeInfo(Type).@"struct".fields) |field| {
                 @field(result, field.name) = @field(self, field.name) * other;
+            }
+            return result;
+        }
+
+        pub fn random() Type {
+            var result: Type = undefined;
+            inline for (@typeInfo(Type).@"struct".fields) |field| {
+                @field(result, field.name) = rand.random();
+            }
+            return result;
+        }
+
+        pub fn random_minmax(min: f32, max: f32) Type {
+            var result: Type = undefined;
+            inline for (@typeInfo(Type).@"struct".fields) |field| {
+                @field(result, field.name) = rand.random_minmax(min, max);
             }
             return result;
         }

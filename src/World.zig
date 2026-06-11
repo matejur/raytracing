@@ -10,7 +10,7 @@ const World = @This();
 
 const world_size = 64;
 
-objects: [64]Hittable = undefined,
+objects: [world_size]Hittable = undefined,
 count: usize = 0,
 
 const WorldError = error{Full};

@@ -22,8 +22,23 @@ pub fn normalize(self: Vec3) Vec3 {
     return self.scale(1 / self.length());
 }
 
+pub fn random_unit_vector() Vec3 {
+    while (true) {
+        const p = Vec3.random_minmax(-1, 1);
+        const lensq = p.lengthSqr();
+        if (1e-30 < lensq and lensq <= 1) return p.scale(1 / lensq);
+    }
+}
+
+pub fn random_on_hemisphere(normal: *const Vec3) Vec3 {
+    const on_unit_sphere = random_unit_vector();
+    if (normal.dot(on_unit_sphere) > 0) return on_unit_sphere;
+    return on_unit_sphere.neg();
+}
+
 const common = Common(Vec3);
 pub const new = common.new;
 pub const scale = common.scale;
 pub const add = common.add(Vec3, Vec3, Vec3);
 pub const neg = common.neg;
+pub const random_minmax = common.random_minmax;

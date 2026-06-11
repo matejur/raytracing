@@ -9,6 +9,7 @@ const Color = @This();
 
 pub fn write_color(self: *Color, writer: *std.Io.Writer) !void {
     self.clamp(0, 1);
+    self.to_gamma();
     const pixel = [_]u8{
         @floor(self.r * 255),
         @floor(self.g * 255),
@@ -16,6 +17,13 @@ pub fn write_color(self: *Color, writer: *std.Io.Writer) !void {
     };
 
     _ = try writer.write(&pixel);
+}
+
+pub fn to_gamma(self: *Color) void {
+    inline for (@typeInfo(Color).@"struct".fields) |field| {
+        const val = @field(self, field.name);
+        if (val > 0) @field(self, field.name) = @sqrt(val);
+    }
 }
 
 pub fn lerp(c1: Color, c2: Color, t: f32) Color {

@@ -22,11 +22,13 @@ pub fn at(self: Ray, t: f32) Pos3 {
     return self.orig.addVec(self.dir.scale(t));
 }
 
-pub fn color(self: *const Ray, world: *const World) Color {
-    const did_hit = world.hit(self, Interval.new(0, std.math.inf(f32)));
+pub fn color(self: *const Ray, world: *const World, bounces_remaining: u32) Color {
+    if (bounces_remaining <= 0) return Color.new(0, 0, 0);
+
+    const did_hit = world.hit(self, Interval.new(0.001, std.math.inf(f32)));
     if (did_hit) |hit_info| {
-        const N = hit_info.normal;
-        return Color.new(N.x + 1, N.y + 1, N.z + 1).scale(0.5);
+        const dir = hit_info.normal.add(Vec3.random_unit_vector());
+        return color(&Ray.new(hit_info.pos, dir), world, bounces_remaining - 1).scale(0.5);
     }
 
     const unit_dir = self.dir.normalize();

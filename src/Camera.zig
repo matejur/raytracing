@@ -15,6 +15,7 @@ const CameraParameters = struct {
     aspect_ratio: f32 = 16.0 / 9.0,
     image_width: u32 = 400,
     samples_per_pixel: u32 = 10,
+    max_bounces: u32 = 10,
 };
 
 image_width: u32,
@@ -25,6 +26,7 @@ pixel_delta_u: Vec3,
 pixel_delta_v: Vec3,
 samples_per_pixel: u32,
 pixel_samples_scale: f32,
+max_bounces: u32,
 
 pub fn create(parameters: CameraParameters) Camera {
     const aspect = parameters.aspect_ratio;
@@ -58,6 +60,7 @@ pub fn create(parameters: CameraParameters) Camera {
         .pixel_delta_v = pixel_delta_v,
         .samples_per_pixel = parameters.samples_per_pixel,
         .pixel_samples_scale = 1.0 / @as(f32, @floatFromInt(parameters.samples_per_pixel)),
+        .max_bounces = parameters.max_bounces,
     };
 }
 
@@ -72,7 +75,7 @@ pub fn render(self: *const Camera, world: *const World, writer: *std.Io.Writer) 
 
             for (0..self.samples_per_pixel) |_| {
                 const ray = get_ray(self, i, j);
-                color = color.add(ray.color(world));
+                color = color.add(ray.color(world, self.max_bounces));
             }
 
             color = color.scale(self.pixel_samples_scale);
