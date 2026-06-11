@@ -1,4 +1,5 @@
 const Pos3 = @import("../math/Pos3.zig");
+const Interval = @import("../math/Interval.zig");
 const Ray = @import("../Ray.zig");
 
 const HitRecord = @import("../World.zig").HitRecord;
@@ -8,7 +9,7 @@ radius: f32,
 
 const Sphere = @This();
 
-pub fn hit(self: *const Sphere, ray: *const Ray, tMin: f32, tMax: f32) ?HitRecord {
+pub fn hit(self: *const Sphere, ray: *const Ray, length_minmax: Interval) ?HitRecord {
     const oc = self.center.sub(ray.orig);
     const a = ray.dir.lengthSqr();
     const h = ray.dir.dot(oc);
@@ -20,9 +21,9 @@ pub fn hit(self: *const Sphere, ray: *const Ray, tMin: f32, tMax: f32) ?HitRecor
     const sqrtD = @sqrt(D);
 
     var root = (h - sqrtD) / a;
-    if (root <= tMin or tMax <= root) {
+    if (!length_minmax.contains(root)) {
         root = (h + sqrtD) / a;
-        if (root <= tMin or tMax <= root) {
+        if (!length_minmax.contains(root)) {
             return null;
         }
     }

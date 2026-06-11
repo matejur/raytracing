@@ -6,3 +6,4 @@ pub const Sphere = @import("geometry/Sphere.zig");
 
 pub const Ray = @import("Ray.zig");
 pub const World = @import("World.zig");
+pub const Camera = @import("Camera.zig");

@@ -4,6 +4,8 @@ const Ray = @import("Ray.zig");
 const Sphere = @import("geometry/Sphere.zig");
 const Pos3 = @import("math/Pos3.zig");
 const Vec3 = @import("math/Vec3.zig");
+const Interval = @import("math/Interval.zig");
+
 const World = @This();
 
 const world_size = 64;
@@ -26,12 +28,12 @@ pub fn addObject(self: *World, object: anytype) WorldError!void {
     self.count += 1;
 }
 
-pub fn hit(self: *const World, ray: *const Ray, tMin: f32, tMax: f32) ?HitRecord {
+pub fn hit(self: *const World, ray: *const Ray, length_minmax: Interval) ?HitRecord {
     var record: ?HitRecord = null;
-    var closest = tMax;
+    var closest = length_minmax.max;
 
     for (self.objects[0..self.count]) |object| {
-        const did_hit = object.hit(ray, tMin, closest);
+        const did_hit = object.hit(ray, Interval.new(length_minmax.min, closest));
         if (did_hit) |hit_info| {
             record = hit_info;
             closest = hit_info.t;
@@ -62,9 +64,9 @@ pub const HitRecord = struct {
 pub const Hittable = union(enum) {
     sphere: Sphere,
 
-    pub fn hit(self: *const Hittable, ray: *const Ray, tMin: f32, tMax: f32) ?HitRecord {
+    pub fn hit(self: *const Hittable, ray: *const Ray, length_minmax: Interval) ?HitRecord {
         return switch (self.*) {
-            .sphere => |sphere| sphere.hit(ray, tMin, tMax),
+            .sphere => |sphere| sphere.hit(ray, length_minmax),
         };
     }
 };

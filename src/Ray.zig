@@ -5,6 +5,7 @@ const print = std.debug.print;
 const Color = @import("math/Color.zig");
 const Pos3 = @import("math/Pos3.zig");
 const Vec3 = @import("math/Vec3.zig");
+const Interval = @import("math/Interval.zig");
 
 const World = @import("World.zig");
 
@@ -22,7 +23,7 @@ pub fn at(self: Ray, t: f32) Pos3 {
 }
 
 pub fn color(self: *const Ray, world: *const World) Color {
-    const did_hit = world.hit(self, 0, std.math.inf(f32));
+    const did_hit = world.hit(self, Interval.new(0, std.math.inf(f32)));
     if (did_hit) |hit_info| {
         const N = hit_info.normal;
         return Color.new(N.x + 1, N.y + 1, N.z + 1).scale(0.5);
