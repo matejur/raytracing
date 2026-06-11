@@ -1,17 +1,13 @@
 const std = @import("std");
 const print = std.debug.print;
 
-const Color = @import("math/Color.zig").Color;
-const Pos3 = @import("math/Pos3.zig");
-const Vec3 = @import("math/Vec3.zig");
-
-const Ray = @import("Ray.zig");
-
-const hittable = @import("objects/hittable.zig");
-const World = hittable.World;
-const Hittable = hittable.Hittable;
-
-const Sphere = @import("objects/Sphere.zig");
+const raytracer = @import("raytracer");
+const Color = raytracer.Color;
+const Pos3 = raytracer.Pos3;
+const Vec3 = raytracer.Vec3;
+const Ray = raytracer.Ray;
+const World = raytracer.World;
+const Sphere = raytracer.Sphere;
 
 const aspect: f32 = 16.0 / 9.0;
 const image_width: i32 = 400;
@@ -47,12 +43,9 @@ pub fn main(init: std.process.Init) !void {
 
     _ = try writer.print("P6\n{} {}\n255\n", .{ image_width, image_height });
 
-    var world = World{
-        .objects = &[_]Hittable{
-            .{ .sphere = Sphere{ .center = Pos3.new(0, 0, -1), .radius = 0.5 } },
-            .{ .sphere = Sphere{ .center = Pos3.new(0, -100.5, -1), .radius = 100 } },
-        },
-    };
+    var world = World{};
+    try world.addObject(Sphere{ .center = Pos3.new(0, 0, -1), .radius = 0.5 });
+    try world.addObject(Sphere{ .center = Pos3.new(0, -100.5, -1), .radius = 100 });
 
     for (0..image_height) |j| {
         print("\rScanlines remaining: {}", .{image_height - j});

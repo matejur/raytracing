@@ -4,15 +4,23 @@ pub fn build(b: *std.Build) void {
     const target = b.standardTargetOptions(.{});
     const optimize = b.standardOptimizeOption(.{});
 
-    const exe_mod = b.createModule(.{
-        .root_source_file = b.path("src/main.zig"),
+    const module = b.addModule("raytracer", .{
+        .root_source_file = b.path("src/root.zig"),
         .target = target,
         .optimize = optimize,
-        .imports = &.{},
+    });
+
+    const exe_mod = b.createModule(.{
+        .root_source_file = b.path("render.zig"),
+        .target = target,
+        .optimize = optimize,
+        .imports = &.{
+            .{ .name = "raytracer", .module = module },
+        },
     });
 
     const exe = b.addExecutable(.{
-        .name = "raytracing_in_one_weekend",
+        .name = "render",
         .root_module = exe_mod,
     });
 

@@ -1,14 +1,14 @@
 const Pos3 = @import("../math/Pos3.zig");
 const Ray = @import("../Ray.zig");
 
-const HitRecord = @import("hittable.zig").HitRecord;
+const HitRecord = @import("../World.zig").HitRecord;
 
 center: Pos3,
 radius: f32,
 
 const Sphere = @This();
 
-pub fn hit(self: Sphere, ray: *const Ray, tMin: f32, tMax: f32) ?HitRecord {
+pub fn hit(self: *const Sphere, ray: *const Ray, tMin: f32, tMax: f32) ?HitRecord {
     const oc = self.center.sub(ray.orig);
     const a = ray.dir.lengthSqr();
     const h = ray.dir.dot(oc);
