@@ -21,6 +21,6 @@ pub fn main(init: std.process.Init) !void {
     try world.addObject(Sphere{ .center = Pos3.new(0, 0, -1), .radius = 0.5 });
     try world.addObject(Sphere{ .center = Pos3.new(0, -100.5, -1), .radius = 100 });
 
-    const camera = Camera.create(.{ .image_width = 400 });
+    const camera = Camera.create(.{ .samples_per_pixel = 10, .image_width = 400 });
     try camera.render(&world, writer);
 }

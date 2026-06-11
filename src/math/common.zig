@@ -12,7 +12,18 @@ pub fn Common(comptime Type: type) type {
         }
 
         pub fn zero() Type {
-            return Type.splat(0);
+            var result: Type = undefined;
+            inline for (@typeInfo(Type).@"struct".fields) |field| {
+                @field(result, field.name) = 0;
+            }
+            return result;
+        }
+
+        pub fn clamp(self: *Type, min: f32, max: f32) void {
+            inline for (@typeInfo(Type).@"struct".fields) |field| {
+                if (@field(self, field.name) < min) @field(self, field.name) = min;
+                if (@field(self, field.name) > max) @field(self, field.name) = max;
+            }
         }
 
         pub fn splat(value: f32) Type {

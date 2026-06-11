@@ -5,12 +5,16 @@ const World = @import("World.zig");
 const Ray = @import("Ray.zig");
 const Pos3 = @import("math/Pos3.zig");
 const Vec3 = @import("math/Vec3.zig");
+const Color = @import("math/Color.zig");
+
+const rand = @import("utility.zig");
 
 const Camera = @This();
 
 const CameraParameters = struct {
     aspect_ratio: f32 = 16.0 / 9.0,
     image_width: u32 = 400,
+    samples_per_pixel: u32 = 10,
 };
 
 image_width: u32,
@@ -19,6 +23,8 @@ center: Pos3,
 first_pixel_loc: Pos3,
 pixel_delta_u: Vec3,
 pixel_delta_v: Vec3,
+samples_per_pixel: u32,
+pixel_samples_scale: f32,
 
 pub fn create(parameters: CameraParameters) Camera {
     const aspect = parameters.aspect_ratio;
@@ -50,24 +56,37 @@ pub fn create(parameters: CameraParameters) Camera {
         .image_width = image_width,
         .pixel_delta_u = pixel_delta_u,
         .pixel_delta_v = pixel_delta_v,
+        .samples_per_pixel = parameters.samples_per_pixel,
+        .pixel_samples_scale = 1.0 / @as(f32, @floatFromInt(parameters.samples_per_pixel)),
     };
 }
 
 pub fn render(self: *const Camera, world: *const World, writer: *std.Io.Writer) !void {
     _ = try writer.print("P6\n{} {}\n255\n", .{ self.image_width, self.image_height });
     for (0..self.image_height) |j| {
-        print("\rScanlines remaining: {}", .{self.image_height - j});
-        for (0..self.image_width) |i| {
-            const pixel_center = self.first_pixel_loc
-                .addVec(self.pixel_delta_u.scale(@floatFromInt(i)))
-                .addVec(self.pixel_delta_v.scale(@floatFromInt(j)));
-            const ray_dir = pixel_center.sub(self.center);
-            const ray = Ray.new(self.center, ray_dir);
+        if (j % 100 == 0)
+            print("\rScanlines remaining: {}", .{self.image_height - j});
 
-            const color = ray.color(world);
+        for (0..self.image_width) |i| {
+            var color = Color.zero();
+
+            for (0..self.samples_per_pixel) |_| {
+                const ray = get_ray(self, i, j);
+                color = color.add(ray.color(world));
+            }
+
+            color = color.scale(self.pixel_samples_scale);
             try color.write_color(writer);
         }
     }
 
     print("\rDone!                      \n", .{});
+}
+
+fn get_ray(self: *const Camera, i: usize, j: usize) Ray {
+    const pixel_loc = self.first_pixel_loc
+        .addVec(self.pixel_delta_u.scale(rand.random() - 0.5 + @as(f32, @floatFromInt(i))))
+        .addVec(self.pixel_delta_v.scale(rand.random() - 0.5 + @as(f32, @floatFromInt(j))));
+
+    return Ray.new(self.center, pixel_loc.sub(self.center));
 }

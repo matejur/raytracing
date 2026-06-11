@@ -7,7 +7,8 @@ b: f32,
 
 const Color = @This();
 
-pub fn write_color(self: *const Color, writer: *std.Io.Writer) !void {
+pub fn write_color(self: *Color, writer: *std.Io.Writer) !void {
+    self.clamp(0, 1);
     const pixel = [_]u8{
         @floor(self.r * 255),
         @floor(self.g * 255),
@@ -25,5 +26,7 @@ pub fn lerp(c1: Color, c2: Color, t: f32) Color {
 
 const common = Common(Color);
 pub const new = common.new;
+pub const zero = common.zero;
 pub const scale = common.scale;
 pub const add = common.add(Color, Color, Color);
+pub const clamp = common.clamp;
