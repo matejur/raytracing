@@ -9,7 +9,7 @@ const Material = @import("materials/material.zig").Material;
 
 const World = @This();
 
-const world_size = 64;
+const world_size = 512;
 
 objects: [world_size]Hittable = undefined,
 count: usize = 0,

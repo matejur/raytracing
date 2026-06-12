@@ -16,6 +16,12 @@ const CameraParameters = struct {
     image_width: u32 = 400,
     samples_per_pixel: u32 = 10,
     max_bounces: u32 = 10,
+    vfov: f32 = 90,
+    lookfrom: Pos3 = Pos3.new(0, 0, 0),
+    lookat: Pos3 = Pos3.new(0, 0, -1),
+    vecup: Vec3 = Vec3.new(0, 1, 0),
+    defocus_angle: f32 = 0,
+    focus_dist: f32 = 10,
 };
 
 image_width: u32,
@@ -27,40 +33,54 @@ pixel_delta_v: Vec3,
 samples_per_pixel: u32,
 pixel_samples_scale: f32,
 max_bounces: u32,
+defocus_disk_u: Vec3,
+defocus_disk_v: Vec3,
+defocus_angle: f32,
 
-pub fn create(parameters: CameraParameters) Camera {
-    const aspect = parameters.aspect_ratio;
-    const image_width = parameters.image_width;
+pub fn create(params: CameraParameters) Camera {
+    const aspect = params.aspect_ratio;
+    const image_width = params.image_width;
     const image_height: u32 = @max(1, @as(u32, @floor(@as(f32, @floatFromInt(image_width)) / aspect)));
 
-    const focal_length = 1.0;
-    const viewport_height: f32 = 2.0;
+    const theta = utils.degree_to_rad(params.vfov);
+    const h = @tan(theta / 2);
+    const viewport_height: f32 = 2 * h * params.focus_dist;
     const viewport_width: f32 = viewport_height * (@as(f32, @floatFromInt(image_width)) / @as(f32, @floatFromInt(image_height)));
-    const camera_center = Pos3.zero();
 
-    const viewport_u = Vec3.new(viewport_width, 0, 0);
-    const viewport_v = Vec3.new(0, -viewport_height, 0);
+    const w = params.lookfrom.sub(params.lookat).normalize();
+    const u = params.vecup.cross(w).normalize();
+    const v = w.cross(u);
+
+    const viewport_u = u.scale(viewport_width);
+    const viewport_v = v.neg().scale(viewport_height);
 
     const pixel_delta_u = viewport_u.scale(1 / @as(f32, @floatFromInt(image_width)));
     const pixel_delta_v = viewport_v.scale(1 / @as(f32, @floatFromInt(image_height)));
 
-    const viewport_upper_left = camera_center
-        .subVec(.{ .x = 0, .y = 0, .z = focal_length })
+    const viewport_upper_left = params.lookfrom
+        .subVec(w.scale(params.focus_dist))
         .subVec(viewport_u.scale(0.5))
         .subVec(viewport_v.scale(0.5));
     const first_pixel_loc = viewport_upper_left
         .addVec(pixel_delta_u.add(pixel_delta_v).scale(0.5));
 
+    const defocus_radius = params.focus_dist * @tan(utils.degree_to_rad(params.defocus_angle / 2));
+    const defocus_disk_u = u.scale(defocus_radius);
+    const defocus_disk_v = v.scale(defocus_radius);
+
     return .{
-        .center = camera_center,
+        .center = params.lookfrom,
         .first_pixel_loc = first_pixel_loc,
         .image_height = image_height,
         .image_width = image_width,
         .pixel_delta_u = pixel_delta_u,
         .pixel_delta_v = pixel_delta_v,
-        .samples_per_pixel = parameters.samples_per_pixel,
-        .pixel_samples_scale = 1.0 / @as(f32, @floatFromInt(parameters.samples_per_pixel)),
-        .max_bounces = parameters.max_bounces,
+        .samples_per_pixel = params.samples_per_pixel,
+        .pixel_samples_scale = 1.0 / @as(f32, @floatFromInt(params.samples_per_pixel)),
+        .max_bounces = params.max_bounces,
+        .defocus_disk_u = defocus_disk_u,
+        .defocus_disk_v = defocus_disk_v,
+        .defocus_angle = params.defocus_angle,
     };
 }
 
@@ -90,5 +110,13 @@ fn get_ray(self: *const Camera, i: usize, j: usize) Ray {
         .addVec(self.pixel_delta_u.scale(utils.random() - 0.5 + @as(f32, @floatFromInt(i))))
         .addVec(self.pixel_delta_v.scale(utils.random() - 0.5 + @as(f32, @floatFromInt(j))));
 
-    return Ray.new(self.center, pixel_loc.sub(self.center));
+    const ray_origin = if (self.defocus_angle <= 0) self.center else self.defocus_disk_sample();
+    return Ray.new(ray_origin, pixel_loc.sub(ray_origin));
+}
+
+fn defocus_disk_sample(self: *const Camera) Pos3 {
+    const p = Vec3.random_in_unit_disk();
+    return self.center
+        .addVec(self.defocus_disk_u.scale(p.x))
+        .addVec(self.defocus_disk_v.scale(p.y));
 }

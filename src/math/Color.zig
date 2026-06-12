@@ -39,3 +39,5 @@ pub const scale = common.scale;
 pub const add = common.add(Color, Color, Color);
 pub const clamp = common.clamp;
 pub const mul = common.mul;
+pub const random = common.random;
+pub const random_minmax = common.random_minmax;

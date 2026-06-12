@@ -8,6 +8,9 @@ pub const Ray = @import("Ray.zig");
 pub const World = @import("World.zig");
 pub const Camera = @import("Camera.zig");
 
+pub const Material = @import("materials/material.zig").Material;
 pub const Lambertian = @import("materials/Lambertian.zig");
 pub const Metal = @import("materials/Metal.zig");
 pub const Dielectric = @import("materials/Dielectric.zig");
+
+pub const utils = @import("utility.zig");

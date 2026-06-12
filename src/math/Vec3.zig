@@ -1,4 +1,5 @@
 const std = @import("std");
+const utils = @import("../utility.zig");
 const Common = @import("common.zig").Common;
 
 x: f32,
@@ -19,6 +20,14 @@ pub fn dot(self: Vec3, other: Vec3) f32 {
     return self.x * other.x + self.y * other.y + self.z * other.z;
 }
 
+pub fn cross(self: Vec3, other: Vec3) Vec3 {
+    return .{
+        .x = self.y * other.z - self.z * other.y,
+        .y = self.z * other.x - self.x * other.z,
+        .z = self.x * other.y - self.y * other.x,
+    };
+}
+
 pub fn normalize(self: Vec3) Vec3 {
     return self.scale(1 / self.length());
 }
@@ -30,7 +39,7 @@ pub fn near_zero(self: Vec3) bool {
 }
 
 pub fn is_unit(self: Vec3) bool {
-    return @abs(self.lengthSqr() - 1) < 1e-3;
+    return @abs(self.lengthSqr() - 1) < 1e-2;
 }
 
 pub fn reflect(self: Vec3, n: Vec3) Vec3 {
@@ -50,6 +59,18 @@ pub fn refract(self: Vec3, n: Vec3, index: f32) Vec3 {
 pub fn random_unit_vector() Vec3 {
     while (true) {
         const p = Vec3.random_minmax(-1, 1);
+        const lensq = p.lengthSqr();
+        if (1e-30 < lensq and lensq <= 1) return p.scale(1 / lensq);
+    }
+}
+
+pub fn random_in_unit_disk() Vec3 {
+    while (true) {
+        const p = Vec3.new(
+            utils.random_minmax(-1, 1),
+            utils.random_minmax(-1, 1),
+            0,
+        );
         const lensq = p.lengthSqr();
         if (1e-30 < lensq and lensq <= 1) return p.scale(1 / lensq);
     }
