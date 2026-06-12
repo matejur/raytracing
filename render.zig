@@ -9,6 +9,7 @@ const Sphere = raytracer.Sphere;
 const Camera = raytracer.Camera;
 const Lambertian = raytracer.Lambertian;
 const Metal = raytracer.Metal;
+const Dielectric = raytracer.Dielectric;
 
 pub fn main(init: std.process.Init) !void {
     const io = init.io;
@@ -22,13 +23,15 @@ pub fn main(init: std.process.Init) !void {
 
     const material_ground = Lambertian.new(Color.new(0.8, 0.8, 0.0));
     const material_center = Lambertian.new(Color.new(0.1, 0.2, 0.5));
-    const material_left = Metal.new(Color.new(0.8, 0.8, 0.8), 0.3);
+    const material_left = Dielectric.new(1.5);
+    const material_bubble = Dielectric.new(1.0 / 1.5);
     const material_right = Metal.new(Color.new(0.8, 0.6, 0.2), 1.0);
 
     var world = World{};
     try world.addObject(Sphere{ .center = Pos3.new(0, -100.5, -1), .radius = 100, .material = &material_ground });
     try world.addObject(Sphere{ .center = Pos3.new(0, 0, -1.2), .radius = 0.5, .material = &material_center });
     try world.addObject(Sphere{ .center = Pos3.new(-1, 0, -1.0), .radius = 0.5, .material = &material_left });
+    try world.addObject(Sphere{ .center = Pos3.new(-1, 0, -1.0), .radius = 0.4, .material = &material_bubble });
     try world.addObject(Sphere{ .center = Pos3.new(1, 0, -1.0), .radius = 0.5, .material = &material_right });
 
     const camera = Camera.create(.{

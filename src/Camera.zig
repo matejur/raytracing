@@ -7,7 +7,7 @@ const Pos3 = @import("math/Pos3.zig");
 const Vec3 = @import("math/Vec3.zig");
 const Color = @import("math/Color.zig");
 
-const rand = @import("utility.zig");
+const utils = @import("utility.zig");
 
 const Camera = @This();
 
@@ -87,8 +87,8 @@ pub fn render(self: *const Camera, world: *const World, writer: *std.Io.Writer) 
 
 fn get_ray(self: *const Camera, i: usize, j: usize) Ray {
     const pixel_loc = self.first_pixel_loc
-        .addVec(self.pixel_delta_u.scale(rand.random() - 0.5 + @as(f32, @floatFromInt(i))))
-        .addVec(self.pixel_delta_v.scale(rand.random() - 0.5 + @as(f32, @floatFromInt(j))));
+        .addVec(self.pixel_delta_u.scale(utils.random() - 0.5 + @as(f32, @floatFromInt(i))))
+        .addVec(self.pixel_delta_v.scale(utils.random() - 0.5 + @as(f32, @floatFromInt(j))));
 
     return Ray.new(self.center, pixel_loc.sub(self.center));
 }

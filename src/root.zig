@@ -10,3 +10,4 @@ pub const Camera = @import("Camera.zig");
 
 pub const Lambertian = @import("materials/Lambertian.zig");
 pub const Metal = @import("materials/Metal.zig");
+pub const Dielectric = @import("materials/Dielectric.zig");

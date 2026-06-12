@@ -29,9 +29,22 @@ pub fn near_zero(self: Vec3) bool {
     return @abs(self.x) < eps and @abs(self.y) < eps and @abs(self.z) < eps;
 }
 
+pub fn is_unit(self: Vec3) bool {
+    return @abs(self.lengthSqr() - 1) < 1e-3;
+}
+
 pub fn reflect(self: Vec3, n: Vec3) Vec3 {
-    std.debug.assert(@abs(n.lengthSqr() - 1) < 1e-3);
+    std.debug.assert(n.is_unit());
     return self.sub(n.scale(2 * self.dot(n)));
+}
+
+pub fn refract(self: Vec3, n: Vec3, index: f32) Vec3 {
+    std.debug.assert(self.is_unit());
+    std.debug.assert(n.is_unit());
+    const cos_theta = @min(self.neg().dot(n), 1.0);
+    const r_out_perp = self.add(n.scale(cos_theta)).scale(index);
+    const r_out_parallel = n.scale(-@sqrt(@abs(1.0 - r_out_perp.lengthSqr())));
+    return r_out_perp.add(r_out_parallel);
 }
 
 pub fn random_unit_vector() Vec3 {
