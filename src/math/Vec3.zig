@@ -1,3 +1,4 @@
+const std = @import("std");
 const Common = @import("common.zig").Common;
 
 x: f32,
@@ -22,6 +23,17 @@ pub fn normalize(self: Vec3) Vec3 {
     return self.scale(1 / self.length());
 }
 
+pub fn near_zero(self: Vec3) bool {
+    const eps = 1e-6;
+
+    return @abs(self.x) < eps and @abs(self.y) < eps and @abs(self.z) < eps;
+}
+
+pub fn reflect(self: Vec3, n: Vec3) Vec3 {
+    std.debug.assert(@abs(n.lengthSqr() - 1) < 1e-3);
+    return self.sub(n.scale(2 * self.dot(n)));
+}
+
 pub fn random_unit_vector() Vec3 {
     while (true) {
         const p = Vec3.random_minmax(-1, 1);
@@ -40,5 +52,6 @@ const common = Common(Vec3);
 pub const new = common.new;
 pub const scale = common.scale;
 pub const add = common.add(Vec3, Vec3, Vec3);
+pub const sub = common.sub(Vec3, Vec3, Vec3);
 pub const neg = common.neg;
 pub const random_minmax = common.random_minmax;

@@ -38,3 +38,4 @@ pub const zero = common.zero;
 pub const scale = common.scale;
 pub const add = common.add(Color, Color, Color);
 pub const clamp = common.clamp;
+pub const mul = common.mul;

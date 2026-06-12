@@ -27,8 +27,12 @@ pub fn color(self: *const Ray, world: *const World, bounces_remaining: u32) Colo
 
     const did_hit = world.hit(self, Interval.new(0.001, std.math.inf(f32)));
     if (did_hit) |hit_info| {
-        const dir = hit_info.normal.add(Vec3.random_unit_vector());
-        return color(&Ray.new(hit_info.pos, dir), world, bounces_remaining - 1).scale(0.5);
+        var attenuation: Color = undefined;
+        const did_scatter = hit_info.material.scatter(self, &hit_info, &attenuation);
+        if (did_scatter) |scattered_ray| {
+            return attenuation.mul(scattered_ray.color(world, bounces_remaining - 1));
+        }
+        return Color.new(0, 0, 0);
     }
 
     const unit_dir = self.dir.normalize();

@@ -5,6 +5,7 @@ const Sphere = @import("geometry/Sphere.zig");
 const Pos3 = @import("math/Pos3.zig");
 const Vec3 = @import("math/Vec3.zig");
 const Interval = @import("math/Interval.zig");
+const Material = @import("materials/material.zig").Material;
 
 const World = @This();
 
@@ -48,8 +49,9 @@ pub const HitRecord = struct {
     normal: Vec3,
     t: f32,
     front_face: bool,
+    material: *const Material,
 
-    pub fn new(pos: Pos3, outward_normal: Vec3, t: f32, ray: *const Ray) HitRecord {
+    pub fn new(pos: Pos3, outward_normal: Vec3, t: f32, ray: *const Ray, material: *const Material) HitRecord {
         const front_face = ray.dir.dot(outward_normal) < 0;
 
         return .{
@@ -57,6 +59,7 @@ pub const HitRecord = struct {
             .normal = if (front_face) outward_normal else outward_normal.neg(),
             .front_face = front_face,
             .t = t,
+            .material = material,
         };
     }
 };

@@ -1,11 +1,13 @@
 const Pos3 = @import("../math/Pos3.zig");
 const Interval = @import("../math/Interval.zig");
 const Ray = @import("../Ray.zig");
+const Material = @import("../materials/material.zig").Material;
 
 const HitRecord = @import("../World.zig").HitRecord;
 
 center: Pos3,
 radius: f32,
+material: *const Material,
 
 const Sphere = @This();
 
@@ -34,5 +36,6 @@ pub fn hit(self: *const Sphere, ray: *const Ray, length_minmax: Interval) ?HitRe
         hitPos.sub(self.center).scale(1 / self.radius),
         root,
         ray,
+        self.material,
     );
 }

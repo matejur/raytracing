@@ -67,8 +67,7 @@ pub fn create(parameters: CameraParameters) Camera {
 pub fn render(self: *const Camera, world: *const World, writer: *std.Io.Writer) !void {
     _ = try writer.print("P6\n{} {}\n255\n", .{ self.image_width, self.image_height });
     for (0..self.image_height) |j| {
-        if (j % 100 == 0)
-            print("\rScanlines remaining: {}", .{self.image_height - j});
+        print("\rScanlines remaining: {d:>4}", .{self.image_height - j});
 
         for (0..self.image_width) |i| {
             var color = Color.zero();
