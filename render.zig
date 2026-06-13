@@ -14,6 +14,39 @@ const Metal = raytracer.Metal;
 const Dielectric = raytracer.Dielectric;
 const utils = raytracer.utils;
 
+const Options = struct {
+    construct_bvh: bool = true,
+    scene: u32 = 0,
+};
+
+fn parse_args(init: std.process.Init) Options {
+    const args = init.minimal.args.vector;
+    var options = Options{};
+
+    var i: usize = 1;
+    if (i < args.len) {
+        if (std.fmt.parseInt(u32, std.mem.span(args[i]), 10)) |num| {
+            options.scene = num;
+            i += 1;
+        } else |_| {} // Just skip if it's not an integer
+    }
+
+    while (i < args.len) : (i += 1) {
+        const arg = std.mem.span(args[i]);
+
+        if (std.mem.eql(u8, arg, "--no-bvh")) {
+            options.construct_bvh = false;
+            i += 1;
+        } //else if (std.mem.eql(u8, arg, "--width")) {
+        //     i += 1;
+        //     if (i < args.len)
+        //         width = std.fmt.parseInt(usize, args[i], 10) catch width;
+        // }
+    }
+
+    return options;
+}
+
 pub fn main(init: std.process.Init) !void {
     const io = init.io;
     const cwd = std.Io.Dir.cwd();
@@ -24,22 +57,70 @@ pub fn main(init: std.process.Init) !void {
     var file_writer = image_file.writer(io, &.{});
     const writer = &file_writer.interface;
 
-    try scene1(writer);
+    const allocator = init.arena.allocator();
+
+    const options = parse_args(init);
+
+    var scene = switch (options.scene) {
+        0 => try test_scene(allocator),
+        1 => try scene1(allocator),
+        else => {
+            std.debug.print("{} is not a valid scene number\n", .{options.scene});
+            return;
+        },
+    };
+
+    if (options.construct_bvh)
+        try scene.world.construct_bvh(allocator);
+    try scene.camera.render(&scene.world, writer);
 }
 
-fn scene1(writer: *std.Io.Writer) !void {
-    var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
-    defer arena.deinit();
+const Scene = struct { world: World, camera: Camera };
 
-    const allocator = arena.allocator();
-
+fn test_scene(alloc: std.mem.Allocator) !Scene {
     var world = World{};
 
-    const ground_mat = Lambertian.new(Color.new(0.5, 0.5, 0.5));
+    const material = try alloc.create(Material);
+    material.* = Lambertian.new(Color.new(0.5, 0.5, 0.5));
+    try world.addObject(Sphere.static(
+        Pos3.new(-1, 0, 0),
+        0.5,
+        material,
+    ));
+    try world.addObject(Sphere.static(
+        Pos3.new(1, 0, 0),
+        0.5,
+        material,
+    ));
+    try world.addObject(Sphere.static(
+        Pos3.new(0, 0, 0),
+        0.5,
+        material,
+    ));
+
+    const camera = Camera.create(.{
+        .samples_per_pixel = 25,
+        .image_width = 400,
+        .max_bounces = 10,
+        .lookfrom = Pos3.new(0, 0, 3),
+        .lookat = Pos3.new(0, 0, 0),
+        .vfov = 20,
+        .defocus_angle = 0.6,
+        .focus_dist = 10,
+    });
+
+    return .{ .camera = camera, .world = world };
+}
+
+fn scene1(alloc: std.mem.Allocator) !Scene {
+    var world = World{};
+
+    const ground_mat = try alloc.create(Material);
+    ground_mat.* = Lambertian.new(Color.new(0.5, 0.5, 0.5));
     try world.addObject(Sphere.static(
         Pos3.new(0, -1000, 0),
         1000,
-        &ground_mat,
+        ground_mat,
     ));
 
     var a: f32 = -10;
@@ -54,7 +135,7 @@ fn scene1(writer: *std.Io.Writer) !void {
 
             if (center1.sub(Pos3.new(4, 0.2, 0)).length() > 0.9) {
                 const choose_mat = utils.random();
-                const mat: *Material = try allocator.create(Material);
+                const mat: *Material = try alloc.create(Material);
                 var center2: Pos3 = undefined;
 
                 if (choose_mat < 0.8) {
@@ -81,22 +162,28 @@ fn scene1(writer: *std.Io.Writer) !void {
         }
     }
 
+    var mat = try alloc.create(Material);
+    mat.* = Dielectric.new(1.5);
     try world.addObject(Sphere.static(
         Pos3.new(0, 1, 0),
         1.0,
-        &Dielectric.new(1.5),
+        mat,
     ));
 
+    mat = try alloc.create(Material);
+    mat.* = Lambertian.new(Color.new(0.4, 0.2, 0.1));
     try world.addObject(Sphere.static(
         Pos3.new(-4, 1, 0),
         1.0,
-        &Lambertian.new(Color.new(0.4, 0.2, 0.1)),
+        mat,
     ));
 
+    mat = try alloc.create(Material);
+    mat.* = Metal.new(Color.new(0.7, 0.6, 0.5), 0);
     try world.addObject(Sphere.static(
         Pos3.new(4, 1, 0),
         1.0,
-        &Metal.new(Color.new(0.7, 0.6, 0.5), 0),
+        mat,
     ));
 
     const camera = Camera.create(.{
@@ -110,5 +197,5 @@ fn scene1(writer: *std.Io.Writer) !void {
         .focus_dist = 10,
     });
 
-    try camera.render(&world, writer);
+    return .{ .camera = camera, .world = world };
 }

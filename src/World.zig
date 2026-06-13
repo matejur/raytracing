@@ -1,6 +1,8 @@
 const std = @import("std");
 
 const Ray = @import("Ray.zig");
+const AABB = @import("AABB.zig");
+const BvhNode = @import("BvhNode.zig");
 const Sphere = @import("geometry/Sphere.zig");
 const Pos3 = @import("math/Pos3.zig");
 const Vec3 = @import("math/Vec3.zig");
@@ -13,6 +15,7 @@ const world_size = 512;
 
 objects: [world_size]Hittable = undefined,
 count: usize = 0,
+bvh: ?*Hittable = null,
 
 const WorldError = error{Full};
 
@@ -29,7 +32,15 @@ pub fn addObject(self: *World, object: anytype) WorldError!void {
     self.count += 1;
 }
 
+pub fn construct_bvh(self: *World, alloc: std.mem.Allocator) !void {
+    self.bvh = try BvhNode.construct(self.objects[0..self.count], alloc);
+}
+
 pub fn hit(self: *const World, ray: *const Ray, length_minmax: Interval) ?HitRecord {
+    if (self.bvh) |bvh| {
+        return bvh.hit(ray, length_minmax);
+    }
+
     var record: ?HitRecord = null;
     var closest = length_minmax.max;
 
@@ -66,10 +77,19 @@ pub const HitRecord = struct {
 
 pub const Hittable = union(enum) {
     sphere: Sphere,
+    bvh: BvhNode,
 
     pub fn hit(self: *const Hittable, ray: *const Ray, length_minmax: Interval) ?HitRecord {
         return switch (self.*) {
             .sphere => |sphere| sphere.hit(ray, length_minmax),
+            .bvh => |bvh| bvh.hit(ray, length_minmax),
+        };
+    }
+
+    pub fn bounding_box(self: *const Hittable) AABB {
+        return switch (self.*) {
+            .sphere => |sphere| sphere.bounding_box(),
+            .bvh => |bvh| bvh.bbox,
         };
     }
 };
