@@ -1,12 +1,11 @@
 const std = @import("std");
 const print = std.debug.print;
 
-const World = @import("World.zig");
 const Ray = @import("Ray.zig");
+const Scene = @import("Scene.zig");
 const Pos3 = @import("math/Pos3.zig");
 const Vec3 = @import("math/Vec3.zig");
 const Color = @import("math/Color.zig");
-
 const utils = @import("utility.zig");
 
 const Camera = @This();
@@ -84,7 +83,7 @@ pub fn create(params: CameraParameters) Camera {
     };
 }
 
-pub fn render(self: *const Camera, world: *const World, writer: *std.Io.Writer) !void {
+pub fn render(self: *const Camera, scene: *const Scene, writer: *std.Io.Writer) !void {
     _ = try writer.print("P6\n{} {}\n255\n", .{ self.image_width, self.image_height });
     for (0..self.image_height) |j| {
         print("\rScanlines remaining: {d:>4}", .{self.image_height - j});
@@ -93,8 +92,8 @@ pub fn render(self: *const Camera, world: *const World, writer: *std.Io.Writer) 
             var color = Color.zero();
 
             for (0..self.samples_per_pixel) |_| {
-                const ray = get_ray(self, i, j);
-                color = color.add(ray.color(world, self.max_bounces));
+                const ray = self.get_ray(i, j);
+                color = color.add(ray.color(scene, self.max_bounces));
             }
 
             color = color.scale(self.pixel_samples_scale);

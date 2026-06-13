@@ -5,13 +5,13 @@ const raytracer = @import("raytracer");
 const Pos3 = raytracer.Pos3;
 const Vec3 = raytracer.Vec3;
 const Color = raytracer.Color;
-const World = raytracer.World;
 const Sphere = raytracer.Sphere;
 const Camera = raytracer.Camera;
 const Material = raytracer.Material;
 const Lambertian = raytracer.Lambertian;
 const Metal = raytracer.Metal;
 const Dielectric = raytracer.Dielectric;
+const Scene = raytracer.Scene;
 const utils = raytracer.utils;
 
 const Options = struct {
@@ -61,7 +61,7 @@ pub fn main(init: std.process.Init) !void {
 
     const options = parse_args(init);
 
-    var scene = switch (options.scene) {
+    var scene, var camera = switch (options.scene) {
         0 => try test_scene(allocator),
         1 => try scene1(allocator),
         else => {
@@ -71,28 +71,27 @@ pub fn main(init: std.process.Init) !void {
     };
 
     if (options.construct_bvh)
-        try scene.world.construct_bvh(allocator);
-    try scene.camera.render(&scene.world, writer);
+        try scene.construct_bvh(allocator);
+
+    try camera.render(&scene, writer);
 }
 
-const Scene = struct { world: World, camera: Camera };
-
-fn test_scene(alloc: std.mem.Allocator) !Scene {
-    var world = World{};
+fn test_scene(alloc: std.mem.Allocator) !struct { Scene, Camera } {
+    var scene = Scene{};
 
     const material = try alloc.create(Material);
     material.* = Lambertian.new(Color.new(0.5, 0.5, 0.5));
-    try world.addObject(Sphere.static(
+    try scene.addObject(Sphere.static(
         Pos3.new(-1, 0, 0),
         0.5,
         material,
     ));
-    try world.addObject(Sphere.static(
+    try scene.addObject(Sphere.static(
         Pos3.new(1, 0, 0),
         0.5,
         material,
     ));
-    try world.addObject(Sphere.static(
+    try scene.addObject(Sphere.static(
         Pos3.new(0, 0, 0),
         0.5,
         material,
@@ -109,15 +108,15 @@ fn test_scene(alloc: std.mem.Allocator) !Scene {
         .focus_dist = 10,
     });
 
-    return .{ .camera = camera, .world = world };
+    return .{ scene, camera };
 }
 
-fn scene1(alloc: std.mem.Allocator) !Scene {
-    var world = World{};
+fn scene1(alloc: std.mem.Allocator) !struct { Scene, Camera } {
+    var scene = Scene{};
 
     const ground_mat = try alloc.create(Material);
     ground_mat.* = Lambertian.new(Color.new(0.5, 0.5, 0.5));
-    try world.addObject(Sphere.static(
+    try scene.addObject(Sphere.static(
         Pos3.new(0, -1000, 0),
         1000,
         ground_mat,
@@ -152,7 +151,7 @@ fn scene1(alloc: std.mem.Allocator) !Scene {
                     center2 = center1;
                 }
 
-                try world.addObject(Sphere.moving(
+                try scene.addObject(Sphere.moving(
                     center1,
                     center2,
                     0.2,
@@ -164,7 +163,7 @@ fn scene1(alloc: std.mem.Allocator) !Scene {
 
     var mat = try alloc.create(Material);
     mat.* = Dielectric.new(1.5);
-    try world.addObject(Sphere.static(
+    try scene.addObject(Sphere.static(
         Pos3.new(0, 1, 0),
         1.0,
         mat,
@@ -172,7 +171,7 @@ fn scene1(alloc: std.mem.Allocator) !Scene {
 
     mat = try alloc.create(Material);
     mat.* = Lambertian.new(Color.new(0.4, 0.2, 0.1));
-    try world.addObject(Sphere.static(
+    try scene.addObject(Sphere.static(
         Pos3.new(-4, 1, 0),
         1.0,
         mat,
@@ -180,7 +179,7 @@ fn scene1(alloc: std.mem.Allocator) !Scene {
 
     mat = try alloc.create(Material);
     mat.* = Metal.new(Color.new(0.7, 0.6, 0.5), 0);
-    try world.addObject(Sphere.static(
+    try scene.addObject(Sphere.static(
         Pos3.new(4, 1, 0),
         1.0,
         mat,
@@ -197,5 +196,5 @@ fn scene1(alloc: std.mem.Allocator) !Scene {
         .focus_dist = 10,
     });
 
-    return .{ .camera = camera, .world = world };
+    return .{ scene, camera };
 }
