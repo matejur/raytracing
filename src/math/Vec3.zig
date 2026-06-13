@@ -72,7 +72,7 @@ pub fn random_in_unit_disk() Vec3 {
             0,
         );
         const lensq = p.lengthSqr();
-        if (1e-30 < lensq and lensq <= 1) return p.scale(1 / lensq);
+        if (lensq <= 1) return p;
     }
 }
 

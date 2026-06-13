@@ -13,12 +13,10 @@ pub fn new(albedo: Color) Material {
 }
 
 pub fn scatter(self: Lambertian, ray_in: *const Ray, hit_info: *const HitRecord, attenuation: *Color) ?Ray {
-    _ = ray_in;
-
     var scatter_dir = hit_info.normal.add(Vec3.random_unit_vector());
     if (scatter_dir.near_zero()) {
         scatter_dir = hit_info.normal;
     }
     attenuation.* = self.albedo;
-    return Ray.new(hit_info.pos, scatter_dir);
+    return .{ .orig = hit_info.pos, .dir = scatter_dir, .t = ray_in.t };
 }

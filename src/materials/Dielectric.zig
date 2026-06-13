@@ -29,10 +29,12 @@ pub fn scatter(self: Dielectric, ray_in: *const Ray, hit_info: *const HitRecord,
 
     const cannot_refract = ri * sin_theta > 1.0;
 
-    if (cannot_refract or reflectance(cos_theta, ri) > utils.random())
-        return Ray.new(hit_info.pos, unit_dir.reflect(hit_info.normal));
+    const dir = if (cannot_refract or reflectance(cos_theta, ri) > utils.random())
+        unit_dir.reflect(hit_info.normal)
+    else
+        unit_dir.refract(hit_info.normal, ri);
 
-    return Ray.new(hit_info.pos, unit_dir.refract(hit_info.normal, ri));
+    return .{ .orig = hit_info.pos, .dir = dir, .t = ray_in.t };
 }
 
 fn reflectance(cosine: f32, ri: f32) f32 {

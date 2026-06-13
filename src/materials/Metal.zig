@@ -17,5 +17,5 @@ pub fn scatter(self: Metal, ray_in: *const Ray, hit_info: *const HitRecord, atte
     var reflected = ray_in.dir.reflect(hit_info.normal);
     reflected = reflected.normalize().add(Vec3.random_unit_vector().scale(self.fuzz));
     attenuation.* = self.albedo;
-    return Ray.new(hit_info.pos, reflected);
+    return .{ .orig = hit_info.pos, .dir = reflected, .t = ray_in.t };
 }

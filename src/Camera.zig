@@ -111,7 +111,14 @@ fn get_ray(self: *const Camera, i: usize, j: usize) Ray {
         .addVec(self.pixel_delta_v.scale(utils.random() - 0.5 + @as(f32, @floatFromInt(j))));
 
     const ray_origin = if (self.defocus_angle <= 0) self.center else self.defocus_disk_sample();
-    return Ray.new(ray_origin, pixel_loc.sub(ray_origin));
+    const ray_dir = pixel_loc.sub(ray_origin);
+    const ray_time = utils.random();
+
+    return .{
+        .orig = ray_origin,
+        .dir = ray_dir,
+        .t = ray_time,
+    };
 }
 
 fn defocus_disk_sample(self: *const Camera) Pos3 {

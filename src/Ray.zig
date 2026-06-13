@@ -13,10 +13,7 @@ const Ray = @This();
 
 orig: Pos3,
 dir: Vec3,
-
-pub fn new(origin: Pos3, dir: Vec3) Ray {
-    return .{ .orig = origin, .dir = dir };
-}
+t: f32 = 0,
 
 pub fn at(self: Ray, t: f32) Pos3 {
     return self.orig.addVec(self.dir.scale(t));
