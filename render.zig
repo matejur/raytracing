@@ -12,6 +12,9 @@ const Lambertian = raytracer.Lambertian;
 const Metal = raytracer.Metal;
 const Dielectric = raytracer.Dielectric;
 const Scene = raytracer.Scene;
+const Texture = raytracer.Texture;
+const SolidColor = raytracer.SolidColor;
+const CheckerTexture = raytracer.CheckerTexture;
 const utils = raytracer.utils;
 
 const Options = struct {
@@ -79,8 +82,12 @@ pub fn main(init: std.process.Init) !void {
 fn test_scene(alloc: std.mem.Allocator) !struct { Scene, Camera } {
     var scene = Scene{};
 
+    const texture = try alloc.create(Texture);
+    texture.* = SolidColor.new(Color.new(0.5, 0.5, 0.5));
+
     const material = try alloc.create(Material);
-    material.* = Lambertian.new(Color.new(0.5, 0.5, 0.5));
+    material.* = Lambertian.new(texture);
+
     try scene.addObject(Sphere.static(
         Pos3.new(-1, 0, 0),
         0.5,
@@ -114,8 +121,19 @@ fn test_scene(alloc: std.mem.Allocator) !struct { Scene, Camera } {
 fn scene1(alloc: std.mem.Allocator) !struct { Scene, Camera } {
     var scene = Scene{};
 
+    // TODO: Make a nicer API?
+    const even_texture = try alloc.create(Texture);
+    even_texture.* = SolidColor.new(Color.new(0.2, 0.3, 0.1));
+
+    const odd_texture = try alloc.create(Texture);
+    odd_texture.* = SolidColor.new(Color.new(0.9, 0.9, 0.9));
+
+    const checker_texture = try alloc.create(Texture);
+    checker_texture.* = CheckerTexture.new(even_texture, odd_texture, 0.32);
+
     const ground_mat = try alloc.create(Material);
-    ground_mat.* = Lambertian.new(Color.new(0.5, 0.5, 0.5));
+    ground_mat.* = Lambertian.new(checker_texture);
+
     try scene.addObject(Sphere.static(
         Pos3.new(0, -1000, 0),
         1000,
@@ -138,7 +156,9 @@ fn scene1(alloc: std.mem.Allocator) !struct { Scene, Camera } {
                 var center2: Pos3 = undefined;
 
                 if (choose_mat < 0.8) {
-                    mat.* = Lambertian.new(Color.random().mul(Color.random()));
+                    const tex = try alloc.create(Texture);
+                    tex.* = SolidColor.new(Color.random().mul(Color.random()));
+                    mat.* = Lambertian.new(tex);
                     center2 = center1.addVec(Vec3.new(0, utils.random_minmax(0, 0.5), 0));
                 } else if (choose_mat < 0.95) {
                     mat.* = Metal.new(
@@ -170,7 +190,9 @@ fn scene1(alloc: std.mem.Allocator) !struct { Scene, Camera } {
     ));
 
     mat = try alloc.create(Material);
-    mat.* = Lambertian.new(Color.new(0.4, 0.2, 0.1));
+    const tex = try alloc.create(Texture);
+    tex.* = SolidColor.new(Color.new(0.4, 0.2, 0.1));
+    mat.* = Lambertian.new(tex);
     try scene.addObject(Sphere.static(
         Pos3.new(-4, 1, 0),
         1.0,

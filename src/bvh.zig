@@ -58,7 +58,7 @@ pub const BvhNode = struct {
 
         const left_hit = self.left.hit(ray, interval);
         if (left_hit) |h| {
-            interval.max = h.t;
+            interval.max = h.dist_from_camera;
         }
 
         const right_hit = self.right.hit(ray, interval);

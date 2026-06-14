@@ -67,19 +67,23 @@ pub const Hittable = union(enum) {
 pub const HitRecord = struct {
     pos: Pos3,
     normal: Vec3,
-    t: f32,
+    dist_from_camera: f32,
     front_face: bool,
     material: *const Material,
+    u: f32,
+    v: f32,
 
-    pub fn new(pos: Pos3, outward_normal: Vec3, t: f32, ray: *const Ray, material: *const Material) HitRecord {
+    pub fn new(pos: Pos3, outward_normal: Vec3, dist_from_camera: f32, ray: *const Ray, material: *const Material, u: f32, v: f32) HitRecord {
         const front_face = ray.dir.dot(outward_normal) < 0;
 
         return .{
             .pos = pos,
             .normal = if (front_face) outward_normal else outward_normal.neg(),
             .front_face = front_face,
-            .t = t,
+            .dist_from_camera = dist_from_camera,
             .material = material,
+            .u = u,
+            .v = v,
         };
     }
 };

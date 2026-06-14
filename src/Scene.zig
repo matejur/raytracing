@@ -48,7 +48,7 @@ pub fn hit(self: *const Scene, ray: *const Ray, length_minmax: Interval) ?HitRec
         const did_hit = object.hit(ray, Interval.new(length_minmax.min, closest));
         if (did_hit) |hit_info| {
             record = hit_info;
-            closest = hit_info.t;
+            closest = hit_info.dist_from_camera;
         }
     }
 

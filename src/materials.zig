@@ -5,6 +5,10 @@ const Vec3 = @import("math/Vec3.zig");
 const Ray = @import("Ray.zig");
 const HitRecord = Ray.HitRecord;
 
+const textures = @import("textures.zig");
+const Texture = textures.Texture;
+const SolidColor = textures.SolidColor;
+
 const utils = @import("utility.zig");
 
 pub const Material = union(enum) {
@@ -22,10 +26,10 @@ pub const Material = union(enum) {
 };
 
 pub const Lambertian = struct {
-    albedo: Color,
+    tex: *Texture,
 
-    pub fn new(albedo: Color) Material {
-        return .{ .lambertian = .{ .albedo = albedo } };
+    pub fn new(tex: *Texture) Material {
+        return .{ .lambertian = .{ .tex = tex } };
     }
 
     pub fn scatter(self: Lambertian, ray_in: *const Ray, hit_info: *const HitRecord, attenuation: *Color) ?Ray {
@@ -33,7 +37,7 @@ pub const Lambertian = struct {
         if (scatter_dir.near_zero()) {
             scatter_dir = hit_info.normal;
         }
-        attenuation.* = self.albedo;
+        attenuation.* = self.tex.value(hit_info.u, hit_info.v, hit_info.pos);
         return .{ .orig = hit_info.pos, .dir = scatter_dir, .t = ray_in.t };
     }
 };

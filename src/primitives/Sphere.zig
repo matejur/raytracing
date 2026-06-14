@@ -59,5 +59,7 @@ pub fn hit(self: *const Sphere, ray: *const Ray, length_minmax: Interval) ?HitRe
         root,
         ray,
         self.material,
+        0,
+        0,
     );
 }

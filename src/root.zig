@@ -16,6 +16,11 @@ pub const Lambertian = mat.Lambertian;
 pub const Metal = mat.Metal;
 pub const Dielectric = mat.Dielectric;
 
+const tex = @import("textures.zig");
+pub const Texture = tex.Texture;
+pub const SolidColor = tex.SolidColor;
+pub const CheckerTexture = tex.CheckerTexture;
+
 pub const utils = @import("utility.zig");
 
 pub fn render(scene: Scene, camera: Camera, writer: *std.Io.Writer) !void {
